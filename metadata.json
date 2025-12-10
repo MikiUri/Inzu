@@ -1,5 +1,5 @@
 {
-  "name": "Copy of Inzu visualizatior V3",
+  "name": "Inzu visualizatior V3",
   "description": "A real-time visual inspection system for large format printers, tracking defects like banding and smears on a virtual print roll.",
   "requestFramePermissions": []
 }

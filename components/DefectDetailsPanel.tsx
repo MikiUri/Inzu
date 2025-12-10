@@ -113,10 +113,10 @@ const DefectDetailsPanel: React.FC<DefectDetailsPanelProps> = ({ error, onClose,
                  </span>
                </div>
              )}
-             {error.materialWasteMeters !== undefined && (
+             {error.wasteMeters !== undefined && (
                <div>
                  <label className="block text-[12px] text-hp-gray mb-1">Est. Waste</label>
-                 <span className="text-[13px] font-semibold text-hp-dark">{error.materialWasteMeters}m</span>
+                 <span className="text-[13px] font-semibold text-hp-dark">{error.wasteMeters}m</span>
                </div>
              )}
           </div>
