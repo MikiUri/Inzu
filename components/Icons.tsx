@@ -16,17 +16,30 @@ import {
   AlignJustify, // For Banding
   Droplets, // For Ink Drop
   ChevronRight,
-  ChevronDown, // New
+  ChevronDown, 
   TrendingUp,
   FileWarning,
   Settings,
-  Sliders, // New
-  BookOpen, // Training
-  Scissors, // Auto cut/mark
-  PieChart, // New
-  BarChart3, // New
-  FileText, // New
-  DollarSign // New
+  Sliders, 
+  BookOpen, 
+  Scissors, 
+  PieChart, 
+  BarChart3, 
+  FileText, 
+  DollarSign,
+  Home,
+  Layers,
+  LayoutGrid,
+  Filter,
+  MoreHorizontal,
+  PauseCircle,
+  PlayCircle,
+  StopCircle,
+  Search,
+  CheckSquare,
+  Square,
+  Share2,
+  Flag
 } from 'lucide-react';
 
 export const Icons = {
@@ -48,6 +61,8 @@ export const Icons = {
   Grain: GripHorizontal,
   Banding: AlignJustify,
   InkDrop: Droplets,
+  Scratch: FileWarning,
+  Misregistration: Layers,
   
   // UI
   ArrowRight: ChevronRight,
@@ -61,5 +76,19 @@ export const Icons = {
   PieChart: PieChart,
   BarChart: BarChart3,
   FileText: FileText,
-  Dollar: DollarSign
+  Dollar: DollarSign,
+  
+  // Navigation & Actions
+  Home: Home,
+  Jobs: LayoutGrid,
+  Filter: Filter,
+  More: MoreHorizontal,
+  Pause: PauseCircle,
+  Play: PlayCircle,
+  Stop: StopCircle,
+  Search: Search,
+  Checkbox: CheckSquare,
+  Square: Square,
+  Share: Share2,
+  Report: Flag
 };

@@ -1,19 +1,23 @@
 export enum ErrorSeverity {
-  HIGH = 'High Severity',
-  MEDIUM = 'Medium Severity',
-  LOW = 'Low Severity'
+  CRITICAL = 'Critical',
+  HIGH = 'High',
+  MEDIUM = 'Medium',
+  LOW = 'Low'
 }
 
 export enum ErrorType {
   BANDING = 'Banding',
-  SMEARS = 'Smears',
-  GRAIN = 'Grain',
-  INK_DROP = 'Ink Drop'
+  SMEARS = 'Ink Smudge',
+  GRAIN = 'Grain/Noise',
+  INK_DROP = 'Ink Drop',
+  SCRATCH = 'Scratch',
+  MISREGISTRATION = 'Misregistration'
 }
 
 export enum ErrorStatus {
   ACTIVE = 'Active',
-  DISMISSED = 'Dismissed'
+  DISMISSED = 'Dismissed',
+  REPORTED = 'Reported'
 }
 
 export enum DefectOrigin {
@@ -22,9 +26,9 @@ export enum DefectOrigin {
 }
 
 export interface ThresholdConfig {
-  deltaE: number; // Tolerance for color deviation
-  minDefectSizeMM: number; // Minimum size to trigger detection
-  highSeverityPercentage: number; // Threshold to classify as High Severity
+  deltaE: number; 
+  minDefectSizeMM: number; 
+  highSeverityPercentage: number; 
 }
 
 export type QualityProfileType = 'High Quality (1200dpi)' | 'Standard (600dpi)' | 'Draft (300dpi)' | 'Eco Mode';
@@ -33,25 +37,30 @@ export interface PrintError {
   id: string;
   type: ErrorType;
   severity: ErrorSeverity;
-  timestamp: string;
+  timestamp: string; // HH:MM format
   meter: number; // Position on the roll in meters
   status: ErrorStatus;
-  xPosition: number; // 0-100 percentage for horizontal position on roll
+  xPosition: number; // 0-100 percentage
   
-  // New Fields
   origin: DefectOrigin;
   deltaE?: number;
+  wasteCost?: number; // Cost in Euros
+  wasteMeters?: number; // Length wasted
+  
   probableCauses?: string[];
   correctiveActions?: string[];
   ignoreReason?: string;
-  materialWasteMeters?: number;
+  operatorId?: string;
   autoMarked?: boolean;
 }
 
 export interface PrintJobStatus {
   isPrinting: boolean;
+  isPaused: boolean;
   jobName: string;
   jobId: string;
+  machineId: string;
+  machineName: string;
   totalLengthMeters: number;
   currentMeter: number;
   printSpeed: number; // m/min
@@ -63,4 +72,12 @@ export interface PredictiveAlert {
   title: string;
   trend: string;
   severity: 'warning' | 'info';
+}
+
+export type ViewType = 'dashboard' | 'activeJob' | 'reports' | 'training' | 'settings';
+
+export interface Machine {
+  id: string;
+  name: string;
+  status: 'idle' | 'running' | 'paused' | 'error';
 }

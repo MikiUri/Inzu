@@ -1,370 +1,253 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Icons } from './components/Icons';
-import VirtualRoll from './components/VirtualRoll';
+import LeftNavigation from './components/LeftNavigation';
+import TopBar from './components/TopBar';
+import PrintVisualizer from './components/PrintVisualizer';
+import ErrorDetailsPanel from './components/ErrorDetailsPanel';
 import TimelineRail from './components/TimelineRail';
-import ErrorCard from './components/ErrorCard';
-import DefectDetailsPanel from './components/DefectDetailsPanel';
+import RealImageModal from './components/RealImageModal';
+import ConfirmationModal from './components/ConfirmationModal';
+import DashboardView from './components/DashboardView';
 import SettingsModal from './components/SettingsModal';
-import TrainingModal from './components/TrainingModal'; // New Import
-import WasteReportModal from './components/WasteReportModal'; // New Import
+import TrainingModal from './components/TrainingModal';
+import WasteReportModal from './components/WasteReportModal';
+
 import { 
   PrintError, 
   ErrorStatus, 
   PrintJobStatus,
-  ErrorType,
-  ErrorSeverity,
-  DefectOrigin,
+  ViewType,
   ThresholdConfig,
   QualityProfileType
 } from './types';
 import { 
   MOCK_JOB_STATUS, 
-  MOCK_ALERTS,
   INITIAL_ERRORS, 
-  PIXELS_PER_METER,
   SIMULATION_SPEED_METERS,
-  ERROR_SPAWN_MIN_METERS,
-  ERROR_SPAWN_MAX_METERS,
   MAX_SIMULATION_METERS,
   ROLL_LENGTH_METERS as INITIAL_ROLL_LENGTH
 } from './constants';
 
 const App: React.FC = () => {
-  // State
+  // --- View State ---
+  const [currentView, setCurrentView] = useState<ViewType>('activeJob');
+
+  // --- Data State ---
   const [errors, setErrors] = useState<PrintError[]>(INITIAL_ERRORS);
   const [jobStatus, setJobStatus] = useState<PrintJobStatus>(MOCK_JOB_STATUS);
-  const [selectedErrorId, setSelectedErrorId] = useState<string | null>(null);
-  const [currentScrollMeter, setCurrentScrollMeter] = useState(0);
-  const [showScrollTop, setShowScrollTop] = useState(false);
-  const [showDetailsPanel, setShowDetailsPanel] = useState(false);
   
-  // Settings State
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  // --- Settings State ---
+  const [qualityProfile, setQualityProfile] = useState<QualityProfileType>('High Quality (1200dpi)');
   const [thresholds, setThresholds] = useState<ThresholdConfig>({
-    deltaE: 2.0,
-    minDefectSizeMM: 0.5,
-    highSeverityPercentage: 85
+      deltaE: 2.0,
+      minDefectSizeMM: 1.0,
+      highSeverityPercentage: 85
   });
-
-  // Modal States (New)
-  const [isTrainingOpen, setIsTrainingOpen] = useState(false);
-  const [isWasteReportOpen, setIsWasteReportOpen] = useState(false);
   
-  // Simulation State
+  // --- Selection State ---
+  const [selectedErrorId, setSelectedErrorId] = useState<string | null>(null);
+  const [bulkSelectedIds, setBulkSelectedIds] = useState<string[]>([]);
+  
+  // --- Simulation State ---
   const [simulationMeters, setSimulationMeters] = useState(0);
-  const [nextErrorAt, setNextErrorAt] = useState<number>(6); 
   const [totalRollMeters, setTotalRollMeters] = useState(INITIAL_ROLL_LENGTH);
-
-  // Refs
+  
+  // --- UI/Modal State ---
+  const [viewingImageError, setViewingImageError] = useState<PrintError | null>(null);
+  const [ignoreTarget, setIgnoreTarget] = useState<PrintError | null>(null);
+  
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const nextErrorIdRef = useRef<number>(6);
+  const [currentScrollMeter, setCurrentScrollMeter] = useState(0);
 
-  const selectedError = errors.find(e => e.id === selectedErrorId);
-  const activeErrorCount = errors.filter(e => e.status === ErrorStatus.ACTIVE).length;
-  const ROLL_START_OFFSET_PX = 128; 
+  // --- Helpers ---
+  const activeErrors = errors.filter(e => e.status === ErrorStatus.ACTIVE);
+  const totalWasteCost = activeErrors.reduce((sum, e) => sum + (e.wasteCost || 0), 0);
 
-  // --- Simulation Logic ---
-  useEffect(() => {
-    const interval = setTimeout(() => {
-        const speed = SIMULATION_SPEED_METERS;
-        const newSimMeters = simulationMeters + speed;
-        
-        const maxErrorMeter = Math.max(...errors.map(e => e.meter), 0);
-        
-        if (maxErrorMeter > MAX_SIMULATION_METERS) {
-            setSimulationMeters(0);
-            setErrors(INITIAL_ERRORS);
-            setTotalRollMeters(INITIAL_ROLL_LENGTH);
-            setNextErrorAt(6);
-            nextErrorIdRef.current = 6;
-        } else {
-            const updatedErrors = errors.map(e => ({
-                ...e,
-                meter: parseFloat((e.meter + speed).toFixed(2))
-            }));
-            
-            let newNextErrorAt = nextErrorAt - speed;
-            if (newNextErrorAt <= 0) {
-                const newId = nextErrorIdRef.current.toString();
-                nextErrorIdRef.current += 1;
-
-                const newError: PrintError = {
-                    id: newId,
-                    type: Math.random() > 0.5 ? ErrorType.BANDING : (Math.random() > 0.5 ? ErrorType.SMEARS : ErrorType.GRAIN),
-                    severity: Math.random() > 0.7 ? ErrorSeverity.HIGH : ErrorSeverity.MEDIUM,
-                    timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-                    meter: 0,
-                    status: ErrorStatus.ACTIVE,
-                    xPosition: Math.floor(Math.random() * 80) + 10,
-                    origin: Math.random() > 0.8 ? DefectOrigin.FILE : DefectOrigin.MACHINE,
-                    deltaE: parseFloat((Math.random() * 3).toFixed(1))
-                };
-                
-                updatedErrors.push(newError);
-                newNextErrorAt = Math.random() * (ERROR_SPAWN_MAX_METERS - ERROR_SPAWN_MIN_METERS) + ERROR_SPAWN_MIN_METERS;
-            }
-
-            setSimulationMeters(newSimMeters);
-            setErrors(updatedErrors);
-            setNextErrorAt(newNextErrorAt);
-            setTotalRollMeters(INITIAL_ROLL_LENGTH + newSimMeters);
-            setJobStatus(prev => ({ ...prev, currentMeter: prev.currentMeter + speed }));
-        }
-    }, 3000); 
-
-    return () => clearTimeout(interval);
-  }, [simulationMeters, errors, nextErrorAt]);
-
-  // Scroll Handling
+  // --- Scroll Logic ---
   const handleScroll = () => {
     if (scrollContainerRef.current) {
-      const { scrollTop, clientHeight } = scrollContainerRef.current;
-      setShowScrollTop(scrollTop > 300);
-      const centerPixel = scrollTop + (clientHeight / 2);
-      const pixelOnRoll = centerPixel - ROLL_START_OFFSET_PX;
-      const meter = Math.max(0, pixelOnRoll / PIXELS_PER_METER);
-      setCurrentScrollMeter(meter);
+        const { scrollTop, clientHeight } = scrollContainerRef.current;
+        const pixelsPerMeter = 150;
+        const centerPixel = scrollTop + (clientHeight / 2);
+        setCurrentScrollMeter(Math.max(0, centerPixel / pixelsPerMeter));
     }
   };
 
   useEffect(() => {
     const el = scrollContainerRef.current;
     if (el) {
-      el.addEventListener('scroll', handleScroll);
-      return () => el.removeEventListener('scroll', handleScroll);
+        el.addEventListener('scroll', handleScroll);
+        return () => el.removeEventListener('scroll', handleScroll);
     }
-  }, []);
+  }, [currentView]); // Re-bind when view changes
 
-  const scrollToError = (error: PrintError) => {
-    if (scrollContainerRef.current) {
-        const { clientHeight } = scrollContainerRef.current;
-        const errorPixelOnRoll = error.meter * PIXELS_PER_METER;
-        const targetScrollTop = (ROLL_START_OFFSET_PX + errorPixelOnRoll) - (clientHeight / 2);
-        scrollContainerRef.current.scrollTo({ top: targetScrollTop, behavior: 'smooth' });
-    }
-  };
+  // --- Simulation Loop ---
+  useEffect(() => {
+    if (jobStatus.isPaused || !jobStatus.isPrinting) return;
 
-  const scrollToTop = () => {
-    if (scrollContainerRef.current) {
-        scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
+    const interval = setInterval(() => {
+        const speed = SIMULATION_SPEED_METERS;
+        const newSimMeters = simulationMeters + speed;
+        
+        if (newSimMeters > MAX_SIMULATION_METERS) {
+            setSimulationMeters(0);
+            setTotalRollMeters(INITIAL_ROLL_LENGTH);
+            // Reset simulation for demo purposes
+        } else {
+            setSimulationMeters(newSimMeters);
+            setTotalRollMeters(prev => Math.max(prev, newSimMeters + 50));
+            // Move errors down
+            setErrors(prev => prev.map(e => ({
+                ...e,
+                meter: parseFloat((e.meter + speed).toFixed(2))
+            })));
+        }
+    }, 3000);
 
-  // Interaction Handlers
+    return () => clearInterval(interval);
+  }, [simulationMeters, jobStatus.isPaused, jobStatus.isPrinting]);
+
+  // --- Handlers ---
   const handleSelectError = (error: PrintError) => {
     setSelectedErrorId(error.id);
-    scrollToError(error);
-    setShowDetailsPanel(true);
+    // Auto scroll to error if we are in active job view
+    if (currentView !== 'activeJob') setCurrentView('activeJob');
+    
+    // Use timeout to allow view switch render before scrolling
+    setTimeout(() => {
+        if (scrollContainerRef.current) {
+            const pixelsPerMeter = 150;
+            const targetTop = (error.meter * pixelsPerMeter) - (scrollContainerRef.current.clientHeight / 2);
+            scrollContainerRef.current.scrollTo({ top: targetTop, behavior: 'smooth' });
+        }
+    }, 50);
   };
 
-  const handleDismissError = (id: string, reason: string) => {
-    setErrors(prev => prev.map(e => e.id === id ? { ...e, status: ErrorStatus.DISMISSED, ignoreReason: reason } : e));
+  const handleConfirmIgnore = (reason: string, operatorId: string) => {
+    if (ignoreTarget) {
+        setErrors(prev => prev.map(e => e.id === ignoreTarget.id ? { 
+            ...e, 
+            status: ErrorStatus.DISMISSED, 
+            ignoreReason: reason, 
+            operatorId 
+        } : e));
+        setIgnoreTarget(null);
+        setViewingImageError(null); // Close modal if open
+    }
+  };
+  
+  const handleReportError = (error: PrintError) => {
+    setErrors(prev => prev.map(e => e.id === error.id ? { ...e, status: ErrorStatus.REPORTED } : e));
+  };
+  
+  const handleStop = () => {
+    setJobStatus(prev => ({ ...prev, isPrinting: false, isPaused: false }));
   };
 
-  const handleRestoreError = (id: string) => {
-    setErrors(prev => prev.map(e => e.id === id ? { ...e, status: ErrorStatus.ACTIVE, ignoreReason: undefined } : e));
+  const handleMachineSelect = (machineId: string) => {
+    setJobStatus(prev => ({ 
+        ...prev, 
+        machineId, 
+        machineName: machineId.includes('LATEX') ? 'HP Latex R2000 Plus' : 'HP Stitch S1000'
+    }));
   };
 
-  const handleClosePanel = () => {
-    setShowDetailsPanel(false);
-    setSelectedErrorId(null);
+  const renderContent = () => {
+      switch(currentView) {
+          case 'dashboard':
+              return <DashboardView onNavigate={setCurrentView} onSelectMachine={handleMachineSelect} />;
+          case 'reports':
+              return <WasteReportModal isOpen={true} isPage={true} />;
+          case 'training':
+              return <TrainingModal isOpen={true} isPage={true} />;
+          case 'settings':
+              return (
+                <SettingsModal 
+                    isOpen={true} 
+                    isPage={true}
+                    currentProfile={qualityProfile}
+                    onUpdateProfile={setQualityProfile}
+                    thresholds={thresholds}
+                    onUpdateThresholds={setThresholds}
+                />
+              );
+          case 'activeJob':
+          default:
+              return (
+                 <div className="flex-1 flex overflow-hidden">
+                     {/* Left Panel: Visualizer */}
+                     <div className="flex-1 flex relative min-w-0">
+                        <PrintVisualizer 
+                            errors={activeErrors}
+                            onSelectError={handleSelectError}
+                            selectedErrorId={selectedErrorId}
+                            offsetMeters={simulationMeters}
+                            totalMeters={totalRollMeters}
+                            scrollRef={scrollContainerRef}
+                            selectedErrorIds={bulkSelectedIds}
+                        />
+                        <TimelineRail 
+                           errors={activeErrors}
+                           currentScrollMeter={currentScrollMeter}
+                           onDotClick={handleSelectError}
+                           totalMeters={totalRollMeters}
+                           selectedErrorId={selectedErrorId}
+                        />
+                     </div>
+        
+                     {/* Right Panel: Details */}
+                     <ErrorDetailsPanel 
+                        errors={errors}
+                        selectedErrorId={selectedErrorId}
+                        onSelectError={handleSelectError}
+                        onIgnore={setIgnoreTarget}
+                        onReport={handleReportError}
+                        onViewImage={setViewingImageError}
+                        selectedIds={bulkSelectedIds}
+                        onToggleBulkSelect={(id) => {
+                            setBulkSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+                        }}
+                        onSelectAll={setBulkSelectedIds}
+                     />
+                 </div>
+              );
+      }
   };
 
   return (
-    <div className="flex flex-col h-screen bg-white text-hp-dark overflow-hidden font-sans">
+    <div className="flex h-screen w-full overflow-hidden bg-brand-bg text-brand-dark font-sans">
       
-      {/* HEADER */}
-      <header className="flex-shrink-0 bg-white border-b border-gray-200 h-[64px] flex items-center px-[16px] z-50 shadow-sm justify-between">
-          <div className="flex items-center gap-[16px]">
-              <img 
-                  src="https://upload.wikimedia.org/wikipedia/commons/a/ad/HP_logo_2012.svg" 
-                  alt="HP Logo" 
-                  className="h-[32px] w-auto shrink-0"
-              />
-              <div className="h-6 w-px bg-gray-300"></div>
-              <h1 className="text-[20px] font-semibold text-hp-dark tracking-tight">HP Camera Visualizer</h1>
-          </div>
-          <div className="flex items-center gap-4">
-             {/* Quality Profile / Settings Trigger */}
-             <button 
-                onClick={() => setIsSettingsOpen(true)}
-                className="hidden md:flex items-center gap-2 px-3 py-1 bg-gray-50 rounded border border-gray-200 hover:bg-gray-100 transition-colors"
-             >
-                <Icons.Settings className="w-4 h-4 text-hp-gray" />
-                <span className="text-[12px] font-medium text-hp-gray">{jobStatus.qualityProfile}</span>
-             </button>
-             
-             {/* Training Module Link */}
-             <button 
-                onClick={() => setIsTrainingOpen(true)}
-                className="p-2 text-hp-gray hover:text-hp-blue transition-colors" 
-                title="Operator Training"
-             >
-                <Icons.Training className="w-5 h-5" />
-             </button>
-          </div>
-      </header>
+      {/* 1. Global Sidebar */}
+      <LeftNavigation 
+        currentView={currentView} 
+        onNavigate={setCurrentView}
+      />
 
-      {/* MAIN LAYOUT */}
-      <div className="flex flex-1 h-full overflow-hidden">
-        
-        {/* COL 1: VISUALIZER */}
-        <div className="flex-grow relative h-full flex min-w-0">
-            <VirtualRoll 
-                errors={errors} 
-                onErrorClick={handleSelectError}
-                scrollRef={scrollContainerRef}
-                activeErrorId={selectedErrorId}
-                offsetMeters={simulationMeters}
-                totalMeters={totalRollMeters}
-            />
+      {/* 2. Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0">
+         
+         <TopBar 
+            jobStatus={{...jobStatus, qualityProfile}}
+            totalWasteCost={totalWasteCost}
+            onPauseToggle={() => setJobStatus(prev => ({ ...prev, isPaused: !prev.isPaused }))}
+            onStop={handleStop}
+         />
 
-            {/* FAB Go To Top */}
-            <div className={`absolute bottom-8 right-8 z-40 transition-all duration-300 transform ${showScrollTop ? 'opacity-100 scale-100' : 'opacity-0 scale-75 pointer-events-none'}`}>
-                <button 
-                    onClick={scrollToTop}
-                    className="w-[56px] h-[56px] bg-hp-blue text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-600 transition-colors"
-                >
-                    <Icons.ArrowUp className="w-6 h-6" />
-                </button>
-            </div>
-        </div>
-
-        {/* COL 2: RAIL */}
-        <TimelineRail 
-            errors={errors}
-            currentScrollMeter={currentScrollMeter}
-            onDotClick={handleSelectError}
-            totalMeters={totalRollMeters}
-        />
-
-        {/* COL 3: SIDEBAR (Dashboard or Details) */}
-        <div className="w-[400px] bg-white flex flex-col border-l border-gray-200 shadow-xl z-40 relative">
-            
-            {showDetailsPanel && selectedError ? (
-                // --- VIEW: DEFECT DETAILS ---
-                <DefectDetailsPanel 
-                    error={selectedError} 
-                    onClose={handleClosePanel}
-                    onIgnore={handleDismissError}
-                    onRestore={handleRestoreError}
-                />
-            ) : (
-                // --- VIEW: DASHBOARD & LIST ---
-                <div className="flex flex-col h-full">
-                    
-                    {/* 1. Status Dashboard */}
-                    <div className="p-6 border-b border-gray-100 bg-white">
-                        <div className="flex items-center justify-between mb-6">
-                            {/* Ready/Printing Status */}
-                            <div className="flex items-center gap-2">
-                                <span className="w-[8px] h-[8px] bg-hp-green rounded-full"></span>
-                                <span className="text-[12px] font-semibold text-hp-dark">PRINTING</span>
-                            </div>
-                            
-                            {/* Defects Count */}
-                            <div className="flex items-center gap-2">
-                                <span className="text-[16px] font-bold text-hp-red">{activeErrorCount}</span>
-                                <span className="text-[12px] font-medium text-hp-dark">DEFECTS</span>
-                            </div>
-                        </div>
-
-                        {/* Predictive Alert */}
-                        {MOCK_ALERTS.map(alert => (
-                           <div key={alert.id} className="mb-4 p-3 bg-orange-50 rounded border border-orange-100 flex items-center gap-3">
-                              <Icons.Trend className="w-5 h-5 text-hp-orange" />
-                              <div>
-                                 <div className="text-[12px] font-bold text-hp-dark">{alert.title}</div>
-                                 <div className="text-[10px] text-hp-gray">{alert.trend}</div>
-                              </div>
-                           </div>
-                        ))}
-
-                        {/* Active Job Card */}
-                        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                             <div className="flex justify-between items-start mb-4">
-                                <h3 className="text-[14px] font-semibold text-hp-dark">ACTIVE JOB</h3>
-                                <span className="text-[12px] text-hp-gray font-mono">{jobStatus.jobId}</span>
-                             </div>
-                             
-                             <div className="space-y-4">
-                                 <div>
-                                     <div className="flex justify-between text-[12px] text-hp-gray mb-1">
-                                         <span>Progress</span>
-                                         <span>{Math.round((jobStatus.currentMeter / jobStatus.totalLengthMeters) * 100)}%</span>
-                                     </div>
-                                     <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
-                                        <div 
-                                            className="bg-hp-blue h-full rounded-full transition-all duration-300"
-                                            style={{ width: `${(jobStatus.currentMeter / jobStatus.totalLengthMeters) * 100}%`}}
-                                        ></div>
-                                     </div>
-                                 </div>
-                                 
-                                 <div className="flex justify-between items-end">
-                                     <div>
-                                         <label className="text-[10px] text-hp-gray block">Speed</label>
-                                         <span className="text-[13px] font-semibold text-hp-dark">{jobStatus.printSpeed} m/min</span>
-                                     </div>
-                                     <div>
-                                         <label className="text-[10px] text-hp-gray block text-right">Remaining</label>
-                                         <span className="text-[13px] font-semibold text-hp-dark">
-                                            {(jobStatus.totalLengthMeters - jobStatus.currentMeter).toFixed(1)}m
-                                         </span>
-                                     </div>
-                                 </div>
-                             </div>
-                        </div>
-                    </div>
-
-                    {/* 2. List Header */}
-                    <div className="px-6 py-3 bg-gray-50 border-b border-gray-100">
-                        <h3 className="text-[14px] font-semibold text-hp-dark">DEFECT LOG</h3>
-                    </div>
-
-                    {/* 3. Scrollable List */}
-                    <div className="flex-1 overflow-y-auto p-6 space-y-3 bg-white">
-                        {errors.sort((a,b) => a.meter - b.meter).map((error) => (
-                            <ErrorCard 
-                                key={error.id} 
-                                error={error} 
-                                onClick={handleSelectError} 
-                                isActive={false} 
-                            />
-                        ))}
-                        <div className="text-center pt-4">
-                            <button 
-                                onClick={() => setIsWasteReportOpen(true)}
-                                className="text-[12px] text-hp-blue font-medium hover:underline flex items-center gap-1 justify-center w-full"
-                            >
-                                <Icons.BarChart className="w-4 h-4" />
-                                View Waste Report
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
+         {renderContent()}
+         
       </div>
 
-      {/* MODALS */}
-      <SettingsModal 
-        isOpen={isSettingsOpen} 
-        onClose={() => setIsSettingsOpen(false)}
-        currentProfile={jobStatus.qualityProfile}
-        onUpdateProfile={(profile) => setJobStatus(prev => ({...prev, qualityProfile: profile}))}
-        thresholds={thresholds}
-        onUpdateThresholds={setThresholds}
+      {/* Global Modals */}
+      <RealImageModal 
+        error={viewingImageError} 
+        onClose={() => setViewingImageError(null)} 
+        onIgnore={() => setIgnoreTarget(viewingImageError)}
       />
 
-      <TrainingModal 
-        isOpen={isTrainingOpen}
-        onClose={() => setIsTrainingOpen(false)}
-      />
-
-      <WasteReportModal
-        isOpen={isWasteReportOpen}
-        onClose={() => setIsWasteReportOpen(false)}
+      <ConfirmationModal 
+        isOpen={!!ignoreTarget}
+        title="Ignore Defect?"
+        onClose={() => setIgnoreTarget(null)}
+        onConfirm={handleConfirmIgnore}
       />
 
     </div>

@@ -1,53 +1,51 @@
 import React from 'react';
-import { PrintError, ErrorSeverity, ErrorStatus } from '../types';
+import { PrintError, ErrorStatus } from '../types';
 
 interface TimelineRailProps {
   errors: PrintError[];
   currentScrollMeter: number;
   onDotClick: (error: PrintError) => void;
   totalMeters: number;
+  selectedErrorId: string | null;
 }
 
-const TimelineRail: React.FC<TimelineRailProps> = ({ errors, currentScrollMeter, onDotClick, totalMeters }) => {
+const TimelineRail: React.FC<TimelineRailProps> = ({ errors, currentScrollMeter, onDotClick, totalMeters, selectedErrorId }) => {
   return (
-    <div className="w-16 bg-gray-50 border-r border-l border-gray-200 relative h-full flex-shrink-0 select-none z-50">
-      {/* Track Line */}
-      <div className="absolute left-1/2 top-4 bottom-4 w-0.5 bg-gray-300 transform -translate-x-1/2 rounded-full"></div>
+    <div className="w-12 bg-white border-l border-brand-lightGray relative h-full flex-shrink-0 select-none z-30 flex flex-col items-center">
+      
+      {/* Time Markers Background */}
+      <div className="absolute inset-0 flex flex-col justify-between py-4 pointer-events-none">
+         {Array.from({length: 10}).map((_, i) => (
+             <div key={i} className="w-full border-t border-brand-lightGray/50 h-px relative">
+                 <span className="absolute right-1 -top-2 text-[8px] text-brand-gray">{(i * 5)}m</span>
+             </div>
+         ))}
+      </div>
 
-      {/* Current View Indicator (Pill) */}
+      {/* Current View Indicator Line */}
       <div 
-        className="absolute left-1/2 w-2 h-8 bg-slate-800 rounded-full transform -translate-x-1/2 -translate-y-1/2 transition-all duration-75 z-10 shadow-lg"
-        style={{ 
-          top: `${(currentScrollMeter / totalMeters) * 100}%` 
-        }}
+        className="absolute w-full h-1 bg-brand-blue z-20 shadow-sm"
+        style={{ top: `${(currentScrollMeter / totalMeters) * 100}%` }}
       ></div>
 
       {/* Error Markers */}
       {errors.map((error) => {
-        const topPercent = (error.meter / totalMeters) * 100;
-        const isDismissed = error.status === ErrorStatus.DISMISSED;
-        const isHigh = error.severity === ErrorSeverity.HIGH;
-        
-        let bgClass = isDismissed ? 'bg-gray-400' : 'bg-orange-500';
-        if (!isDismissed && isHigh) bgClass = 'bg-red-600';
+        if (error.status === ErrorStatus.DISMISSED) return null;
 
+        const topPercent = (error.meter / totalMeters) * 100;
+        const isActive = selectedErrorId === error.id;
+        
         return (
           <button
             key={error.id}
             onClick={() => onDotClick(error)}
             className={`
-                absolute left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 
-                flex items-center justify-center
-                w-7 h-7 rounded-full border-2 border-white shadow-md transition-transform hover:scale-125
-                ${bgClass}
+                absolute left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30
+                rounded-full transition-transform
+                ${isActive ? 'w-4 h-4 bg-brand-blue ring-2 ring-blue-200' : 'w-2 h-2 bg-status-error hover:scale-150'}
             `}
             style={{ top: `${topPercent}%` }}
-            title={`Go to Error #${error.id}`}
-          >
-             <span className="text-[10px] font-bold text-white leading-none mt-0.5">
-                {error.id}
-             </span>
-          </button>
+          />
         );
       })}
     </div>

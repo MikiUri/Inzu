@@ -7,7 +7,7 @@
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -18,21 +18,34 @@
               sans: ['Inter', 'sans-serif'],
             },
             colors: {
-              hp: {
+              brand: {
                 blue: '#0078D4',
                 dark: '#212121',
-                gray: '#6B7280',
-                light: '#D1D5DB',
-                red: '#E02424',
-                orange: '#F59E0B',
-                green: '#10B981',
+                gray: '#616161',
+                lightGray: '#E0E0E0',
+                bg: '#F5F7FA',
+                panel: '#FFFFFF',
+              },
+              status: {
+                error: '#E53935', // WCAG AA Compliant
+                warning: '#F59E0B',
+                success: '#10B981',
+                highlight: 'rgba(0, 120, 212, 0.10)',
+                highlightBorder: '#BBBBBB'
               }
             },
             spacing: {
-              '8pt': '8px',
-              '16pt': '16px',
-              '24pt': '24px',
-              '32pt': '32px',
+              '2': '8px',
+              '3': '12px',
+              '4': '16px',
+              '6': '24px',
+              '8': '32px',
+            },
+            fontSize: {
+              'label': ['12px', { lineHeight: '1.2', fontWeight: '500' }],
+              'body': ['14px', { lineHeight: '1.5', fontWeight: '400' }],
+              'h2': ['20px', { lineHeight: '1.2', fontWeight: '600', letterSpacing: '-0.01em' }],
+              'h1': ['28px', { lineHeight: '1.2', fontWeight: '700', letterSpacing: '-0.01em' }],
             }
           }
         }
@@ -54,6 +67,8 @@
       body {
         font-family: 'Inter', sans-serif;
         color: #212121;
+        background-color: #F5F7FA;
+        -webkit-font-smoothing: antialiased;
       }
     </style>
   <script type="importmap">

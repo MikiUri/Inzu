@@ -1,60 +1,103 @@
 import React from 'react';
-import { PrintError, ErrorSeverity, ErrorStatus } from '../types';
+import { PrintError, ErrorSeverity } from '../types';
+import { Icons } from './Icons';
 
 interface ErrorCardProps {
   error: PrintError;
-  onClick: (error: PrintError) => void;
-  isActive: boolean;
+  isSelected: boolean;
+  isChecked: boolean;
+  onToggleCheck: () => void;
+  onClick: () => void;
+  onIgnore: () => void;
+  onReport: () => void;
+  onImageClick: () => void;
 }
 
-const ErrorCard: React.FC<ErrorCardProps> = ({ error, onClick, isActive }) => {
-  const isDismissed = error.status === ErrorStatus.DISMISSED;
-  const isHighSeverity = error.severity === ErrorSeverity.HIGH;
+const ErrorCard: React.FC<ErrorCardProps> = ({ 
+  error, isSelected, isChecked, onToggleCheck, onClick, onIgnore, onReport, onImageClick 
+}) => {
+  
+  const getSeverityStyle = (s: ErrorSeverity) => {
+    switch(s) {
+        case ErrorSeverity.CRITICAL: return 'bg-status-error text-white';
+        case ErrorSeverity.HIGH: return 'bg-red-100 text-status-error';
+        case ErrorSeverity.MEDIUM: return 'bg-status-warning/20 text-status-warning';
+        default: return 'bg-brand-lightGray text-brand-dark';
+    }
+  };
+
+  const imageIndex = 1000 + parseInt(error.id);
 
   return (
-    <button
-      onClick={() => onClick(error)}
+    <div 
+      onClick={onClick}
       className={`
-        w-full text-left p-4 mb-3 rounded-lg border transition-all duration-200 group relative
-        ${isActive ? 'ring-2 ring-blue-500 shadow-md' : 'hover:shadow-md'}
-        ${isDismissed ? 'bg-gray-50 border-gray-200 opacity-60' : 'bg-white border-gray-200'}
+        relative p-4 rounded-lg border transition-all duration-200 mb-4 bg-white
+        ${isSelected ? 'border-brand-blue ring-1 ring-brand-blue shadow-md' : 'border-brand-lightGray hover:border-gray-300'}
       `}
     >
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-3">
-          {/* Index Circle */}
-          <div className={`
-            flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold text-white
-            ${isDismissed ? 'bg-gray-300' : 'bg-orange-400'}
-            ${!isDismissed && isHighSeverity ? 'bg-red-500' : ''}
-          `}>
-            {error.id}
-          </div>
-          <h3 className={`font-semibold text-lg ${isDismissed ? 'text-gray-500' : 'text-gray-800'}`}>
-            {error.type}
-          </h3>
-        </div>
-        
-        {/* Timestamp */}
-        <div className="text-xs text-gray-500 font-mono">
-          Time: {error.timestamp}
-        </div>
+      {/* Header Row */}
+      <div className="flex justify-between items-start mb-3">
+         <div className="flex items-start gap-3">
+             <button 
+                onClick={(e) => { e.stopPropagation(); onToggleCheck(); }}
+                className="mt-1 text-brand-gray hover:text-brand-blue"
+             >
+                {isChecked ? <Icons.Checkbox className="w-5 h-5 text-brand-blue" /> : <Icons.Square className="w-5 h-5" />}
+             </button>
+             <div>
+                 <h2 className="text-h2 text-brand-dark mb-1">{error.type}</h2>
+                 <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide ${getSeverityStyle(error.severity)}`}>
+                    {error.severity}
+                 </span>
+             </div>
+         </div>
+         <span className="text-label text-brand-gray font-mono">{error.timestamp}</span>
       </div>
 
-      <div className="flex justify-between items-center pl-11">
-        <div className="text-sm text-gray-600">
-            Meter: <span className="font-medium text-gray-900">{error.meter}m</span>
-        </div>
-        {isHighSeverity && !isDismissed && (
-            <span className="text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded">High Severity</span>
-        )}
+      {/* Main Content: Large Image */}
+      <div 
+        onClick={(e) => { e.stopPropagation(); onImageClick(); }}
+        className="w-full h-32 bg-gray-100 rounded-md overflow-hidden mb-3 cursor-zoom-in relative group"
+      >
+         <img 
+            src={`https://picsum.photos/600/400?random=${imageIndex}`}
+            alt="Defect"
+            className="w-full h-full object-cover"
+         />
+         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+             <Icons.Maximize className="text-white opacity-0 group-hover:opacity-100 w-6 h-6 drop-shadow-md" />
+         </div>
       </div>
 
-      {/* Active Indicator Line */}
-      {isActive && (
-          <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 rounded-l-lg"></div>
-      )}
-    </button>
+      {/* Details Row */}
+      <div className="flex justify-between items-center mb-4 px-1">
+         <div className="text-label text-brand-gray">
+            Loc: <span className="text-brand-dark font-medium">{error.meter}m</span>
+         </div>
+         {error.wasteCost && (
+            <div className="text-label text-brand-gray">
+               Cost: <span className="text-status-error font-medium">€{error.wasteCost.toFixed(2)}</span>
+            </div>
+         )}
+      </div>
+
+      {/* Actions Row */}
+      <div className="flex gap-3 border-t border-brand-lightGray pt-3">
+         <button 
+            onClick={(e) => { e.stopPropagation(); onIgnore(); }}
+            className="flex-1 py-2 rounded border border-brand-blue text-brand-blue text-label font-medium hover:bg-blue-50 transition-colors"
+         >
+            Ignore
+         </button>
+         <button 
+             onClick={(e) => { e.stopPropagation(); onReport(); }}
+             className="flex-1 py-2 rounded bg-brand-blue text-white text-label font-medium hover:bg-blue-600 transition-colors shadow-sm"
+         >
+             Report
+         </button>
+      </div>
+    </div>
   );
 };
 

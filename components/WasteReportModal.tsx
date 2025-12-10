@@ -3,20 +3,29 @@ import { Icons } from './Icons';
 
 interface WasteReportModalProps {
   isOpen: boolean;
-  onClose: () => void;
+  onClose?: () => void;
+  isPage?: boolean;
 }
 
-const WasteReportModal: React.FC<WasteReportModalProps> = ({ isOpen, onClose }) => {
-  if (!isOpen) return null;
+const WasteReportModal: React.FC<WasteReportModalProps> = ({ isOpen, onClose, isPage = false }) => {
+  if (!isOpen && !isPage) return null;
+
+  const containerClasses = isPage 
+    ? "w-full h-full bg-brand-bg p-8 overflow-y-auto"
+    : "fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200";
+    
+  const wrapperClasses = isPage
+    ? "bg-white rounded-xl shadow-sm border border-brand-lightGray w-full max-w-6xl mx-auto h-[750px] flex flex-col"
+    : "bg-white rounded-xl shadow-2xl w-full max-w-5xl h-[700px] overflow-hidden relative z-10 flex flex-col animate-in slide-in-from-bottom-4 duration-300";
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="absolute inset-0" onClick={onClose}></div>
+    <div className={containerClasses}>
+      {!isPage && <div className="absolute inset-0" onClick={onClose}></div>}
 
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl h-[700px] overflow-hidden relative z-10 flex flex-col animate-in slide-in-from-bottom-4 duration-300">
+      <div className={wrapperClasses}>
         
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+        <div className="flex items-center justify-between p-6 border-b border-gray-100 rounded-t-xl">
            <div className="flex items-center gap-3">
               <div className="p-2 bg-red-50 rounded-lg text-hp-red">
                  <Icons.BarChart className="w-6 h-6" />
@@ -26,9 +35,11 @@ const WasteReportModal: React.FC<WasteReportModalProps> = ({ isOpen, onClose }) 
                  <p className="text-[12px] text-hp-gray">Weekly Analysis • Oct 23 - Oct 30, 2025</p>
               </div>
            </div>
-           <button onClick={onClose} className="p-2 text-hp-gray hover:bg-gray-100 rounded-full transition-colors">
-              <Icons.Close className="w-6 h-6" />
-           </button>
+           {!isPage && (
+            <button onClick={onClose} className="p-2 text-hp-gray hover:bg-gray-100 rounded-full transition-colors">
+                <Icons.Close className="w-6 h-6" />
+            </button>
+           )}
         </div>
 
         {/* Content */}
@@ -131,13 +142,15 @@ const WasteReportModal: React.FC<WasteReportModalProps> = ({ isOpen, onClose }) 
         </div>
         
         {/* Footer */}
-        <div className="p-4 border-t border-gray-100 bg-white flex justify-end gap-3">
+        <div className="p-4 border-t border-gray-100 bg-white flex justify-end gap-3 rounded-b-xl">
              <button className="px-4 py-2 bg-white border border-gray-200 text-hp-dark text-[13px] font-semibold rounded-lg hover:bg-gray-50">
                 Export CSV
              </button>
-             <button onClick={onClose} className="px-4 py-2 bg-hp-blue text-white text-[13px] font-semibold rounded-lg hover:bg-blue-600">
-                Done
-             </button>
+             {!isPage && (
+               <button onClick={onClose} className="px-4 py-2 bg-hp-blue text-white text-[13px] font-semibold rounded-lg hover:bg-blue-600">
+                  Done
+               </button>
+             )}
         </div>
       </div>
     </div>

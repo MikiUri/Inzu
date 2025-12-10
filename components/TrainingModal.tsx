@@ -4,7 +4,8 @@ import { ErrorType } from '../types';
 
 interface TrainingModalProps {
   isOpen: boolean;
-  onClose: () => void;
+  onClose?: () => void;
+  isPage?: boolean;
 }
 
 const TRAINING_MODULES = [
@@ -40,18 +41,26 @@ const TRAINING_MODULES = [
   }
 ];
 
-const TrainingModal: React.FC<TrainingModalProps> = ({ isOpen, onClose }) => {
+const TrainingModal: React.FC<TrainingModalProps> = ({ isOpen, onClose, isPage = false }) => {
   const [activeModule, setActiveModule] = useState(TRAINING_MODULES[0]);
 
-  if (!isOpen) return null;
+  if (!isOpen && !isPage) return null;
+
+  const containerClasses = isPage 
+    ? "w-full h-full bg-brand-bg p-8 overflow-y-auto"
+    : "fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200";
+    
+  const wrapperClasses = isPage
+    ? "bg-white rounded-xl shadow-sm border border-brand-lightGray w-full max-w-6xl mx-auto h-[700px] flex flex-col"
+    : "bg-white rounded-xl shadow-2xl w-full max-w-4xl h-[600px] overflow-hidden relative z-10 flex flex-col";
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="absolute inset-0" onClick={onClose}></div>
+    <div className={containerClasses}>
+      {!isPage && <div className="absolute inset-0" onClick={onClose}></div>}
       
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl h-[600px] overflow-hidden relative z-10 flex flex-col">
+      <div className={wrapperClasses}>
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gray-50">
+        <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gray-50 rounded-t-xl">
            <div className="flex items-center gap-3">
               <div className="p-2 bg-blue-100 rounded-lg text-hp-blue">
                  <Icons.Training className="w-6 h-6" />
@@ -61,9 +70,11 @@ const TrainingModal: React.FC<TrainingModalProps> = ({ isOpen, onClose }) => {
                  <p className="text-[12px] text-hp-gray">Self-learning resources for defect identification and resolution.</p>
               </div>
            </div>
-           <button onClick={onClose} className="p-2 text-hp-gray hover:bg-gray-200 rounded-full transition-colors">
-              <Icons.Close className="w-6 h-6" />
-           </button>
+           {!isPage && (
+            <button onClick={onClose} className="p-2 text-hp-gray hover:bg-gray-200 rounded-full transition-colors">
+                <Icons.Close className="w-6 h-6" />
+            </button>
+           )}
         </div>
 
         <div className="flex flex-1 overflow-hidden">
