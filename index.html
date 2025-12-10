@@ -3,11 +3,43 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AI Camera Visualizator</title>
+    <title>HP Camera Visualizer</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <!-- Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+            colors: {
+              hp: {
+                blue: '#0078D4',
+                dark: '#212121',
+                gray: '#6B7280',
+                light: '#D1D5DB',
+                red: '#E02424',
+                orange: '#F59E0B',
+                green: '#10B981',
+              }
+            },
+            spacing: {
+              '8pt': '8px',
+              '16pt': '16px',
+              '24pt': '24px',
+              '32pt': '32px',
+            }
+          }
+        }
+      }
+    </script>
     <style>
-      /* Custom scrollbar hiding for cleaner UI in specific panels if needed */
+      /* Custom scrollbar hiding */
       .no-scrollbar::-webkit-scrollbar {
         display: none;
       }
@@ -15,20 +47,24 @@
         -ms-overflow-style: none;
         scrollbar-width: none;
       }
-      /* Smooth scrolling for the roll */
+      /* Smooth scrolling */
       html {
         scroll-behavior: smooth;
+      }
+      body {
+        font-family: 'Inter', sans-serif;
+        color: #212121;
       }
     </style>
   <script type="importmap">
 {
   "imports": {
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "vite": "https://aistudiocdn.com/vite@^7.2.6",
-    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0"
+    "vite": "https://aistudiocdn.com/vite@^7.2.7",
+    "react/": "https://aistudiocdn.com/react@^19.2.1/",
+    "react": "https://aistudiocdn.com/react@^19.2.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.559.0",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.2"
   }
 }
 </script>

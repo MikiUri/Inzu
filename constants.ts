@@ -1,4 +1,4 @@
-import { ErrorSeverity, ErrorStatus, ErrorType, PrintError, PrintJobStatus } from './types';
+import { ErrorSeverity, ErrorStatus, ErrorType, PrintError, PrintJobStatus, DefectOrigin, PredictiveAlert } from './types';
 
 // Simulate a 50 meter roll (Viewport height)
 export const ROLL_LENGTH_METERS = 50;
@@ -14,9 +14,16 @@ export const MAX_SIMULATION_METERS = 80;
 export const MOCK_JOB_STATUS: PrintJobStatus = {
   isPrinting: true,
   jobName: "Campaign_Summer_2025_XL_Banner",
-  totalLengthMeters: 150, // Longer total job to allow simulation to run
-  currentMeter: 42.5
+  jobId: "8823-XL-09",
+  totalLengthMeters: 150, 
+  currentMeter: 42.5,
+  printSpeed: 6.2, // m/min
+  qualityProfile: "High Quality (1200dpi)"
 };
+
+export const MOCK_ALERTS: PredictiveAlert[] = [
+  { id: '1', title: 'Banding Trend', trend: '+15% over 4h', severity: 'warning' },
+];
 
 export const INITIAL_ERRORS: PrintError[] = [
   {
@@ -26,7 +33,13 @@ export const INITIAL_ERRORS: PrintError[] = [
     timestamp: '10:32',
     meter: 38,
     status: ErrorStatus.ACTIVE,
-    xPosition: 20
+    xPosition: 20,
+    origin: DefectOrigin.MACHINE,
+    deltaE: 2.1,
+    probableCauses: ['Printhead misalignment', 'Nozzle clogging'],
+    correctiveActions: ['Run printhead cleaning cycle', 'Check alignment pattern'],
+    materialWasteMeters: 0.5,
+    autoMarked: true
   },
   {
     id: '2',
@@ -35,7 +48,11 @@ export const INITIAL_ERRORS: PrintError[] = [
     timestamp: '10:02',
     meter: 28,
     status: ErrorStatus.ACTIVE,
-    xPosition: 65
+    xPosition: 65,
+    origin: DefectOrigin.MACHINE,
+    deltaE: 0.5,
+    probableCauses: ['Media crash', 'Wet ink accumulation'],
+    materialWasteMeters: 1.2
   },
   {
     id: '3',
@@ -44,7 +61,12 @@ export const INITIAL_ERRORS: PrintError[] = [
     timestamp: '09:53',
     meter: 22,
     status: ErrorStatus.ACTIVE,
-    xPosition: 40
+    xPosition: 40,
+    origin: DefectOrigin.MACHINE,
+    deltaE: 4.5,
+    probableCauses: ['Severe nozzle failure', 'Vacuum pressure loss'],
+    correctiveActions: ['Stop printer immediately', 'Contact support'],
+    materialWasteMeters: 3.0
   },
   {
     id: '4',
@@ -53,7 +75,11 @@ export const INITIAL_ERRORS: PrintError[] = [
     timestamp: '09:42',
     meter: 15,
     status: ErrorStatus.ACTIVE,
-    xPosition: 80
+    xPosition: 80,
+    origin: DefectOrigin.FILE,
+    deltaE: 0.2,
+    probableCauses: ['Low resolution source image', 'Incorrect RIP settings'],
+    materialWasteMeters: 0
   },
   {
     id: '5',
@@ -62,6 +88,9 @@ export const INITIAL_ERRORS: PrintError[] = [
     timestamp: '09:12',
     meter: 5,
     status: ErrorStatus.ACTIVE,
-    xPosition: 30
+    xPosition: 30,
+    origin: DefectOrigin.MACHINE,
+    deltaE: 0.8,
+    materialWasteMeters: 0.4
   }
 ];

@@ -1,20 +1,16 @@
 # HP AI Camera Visualizator
 
-A real-time visual inspection system for large format printers, tracking defects like banding and smears on a virtual print roll.
+A real-time visual inspection system for large format printers.
 
-## Getting Started
+## Deployment
 
-1. Install dependencies:
-   ```bash
-   npm install
-   ```
+This project is set up to deploy on **Vercel**.
 
-2. Run the development server:
-   ```bash
-   npm run dev
-   ```
+1. Push this code to a GitHub repository.
+2. Import the repository in Vercel.
+3. Vercel will automatically detect `Vite` and deploy the site.
 
-3. Build for production:
-   ```bash
-   npm run build
-   ```
+## Local Development
+
+1. `npm install`
+2. `npm run dev`
