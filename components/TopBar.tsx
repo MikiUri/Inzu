@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Icons } from './Icons';
 import { PrintJobStatus, Machine } from '../types';
@@ -7,6 +8,7 @@ interface TopBarProps {
   totalWasteCost: number;
   onPauseToggle: () => void;
   onStop: () => void;
+  onSelectMachine: (machineId: string) => void;
 }
 
 const AVAILABLE_MACHINES: Machine[] = [
@@ -15,39 +17,44 @@ const AVAILABLE_MACHINES: Machine[] = [
     { id: 'STITCH-01', name: 'HP Stitch S1000', status: 'paused' }
 ];
 
-const TopBar: React.FC<TopBarProps> = ({ jobStatus, totalWasteCost, onPauseToggle, onStop }) => {
+const TopBar: React.FC<TopBarProps> = ({ jobStatus, totalWasteCost, onPauseToggle, onStop, onSelectMachine }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
+  const handleMachineSelect = (id: string) => {
+    onSelectMachine(id);
+    setIsDropdownOpen(false);
+  };
+
   return (
-    <header className="h-[72px] bg-white border-b border-brand-lightGray flex items-center justify-between px-6 flex-shrink-0 z-10 shadow-sm relative">
+    <header className="h-[72px] bg-white border-b border-brand-border flex items-center justify-between px-6 flex-shrink-0 z-10 shadow-sm relative">
       
       {/* Left: Machine Selector & Status */}
       <div className="flex items-center gap-6">
         <div className="relative">
             <button 
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center gap-2 text-h2 text-brand-dark hover:opacity-70 transition-opacity"
+                className="flex items-center gap-2 text-xl font-bold text-brand-dark hover:opacity-70 transition-opacity"
             >
                 {jobStatus.machineName}
-                <Icons.ChevronDown className={`w-5 h-5 text-brand-gray transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                <Icons.ChevronDown className={`w-5 h-5 text-brand-muted transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
             
             {/* Machine Dropdown */}
             {isDropdownOpen && (
-                <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-100 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                    <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Select Machine</div>
+                <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-brand-border py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="px-4 py-2 text-xs font-semibold text-brand-muted uppercase tracking-wider">Select Machine</div>
                     {AVAILABLE_MACHINES.map(machine => (
                         <button 
                             key={machine.id}
-                            className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center justify-between group"
-                            onClick={() => setIsDropdownOpen(false)}
+                            className="w-full text-left px-4 py-3 hover:bg-brand-bg flex items-center justify-between group transition-colors"
+                            onClick={() => handleMachineSelect(machine.id)}
                         >
-                            <span className={`text-sm font-medium ${machine.name === jobStatus.machineName ? 'text-brand-blue' : 'text-brand-dark'}`}>
+                            <span className={`text-sm font-medium ${machine.name === jobStatus.machineName ? 'text-brand-secondary' : 'text-brand-dark'}`}>
                                 {machine.name}
                             </span>
                             {machine.status === 'running' && <span className="w-2 h-2 rounded-full bg-status-success"></span>}
                             {machine.status === 'paused' && <span className="w-2 h-2 rounded-full bg-status-warning"></span>}
-                            {machine.status === 'idle' && <span className="w-2 h-2 rounded-full bg-gray-300"></span>}
+                            {machine.status === 'idle' && <span className="w-2 h-2 rounded-full bg-brand-muted"></span>}
                         </button>
                     ))}
                 </div>
@@ -56,12 +63,12 @@ const TopBar: React.FC<TopBarProps> = ({ jobStatus, totalWasteCost, onPauseToggl
             {/* Click outside to close */}
             {isDropdownOpen && <div className="fixed inset-0 z-40" onClick={() => setIsDropdownOpen(false)}></div>}
 
-            <div className="flex items-center gap-3 text-label text-brand-gray mt-1">
+            <div className="flex items-center gap-3 text-xs text-brand-muted mt-1 font-medium">
                 <span>ID: {jobStatus.machineId}</span>
-                <span className="w-1 h-1 rounded-full bg-brand-lightGray"></span>
+                <span className="w-1 h-1 rounded-full bg-brand-border"></span>
                 <span>Job: {jobStatus.jobId}</span>
-                <span className="w-1 h-1 rounded-full bg-brand-lightGray"></span>
-                <span className={`flex items-center gap-1 ${!jobStatus.isPrinting ? 'text-brand-gray' : jobStatus.isPaused ? 'text-status-warning' : 'text-status-success'}`}>
+                <span className="w-1 h-1 rounded-full bg-brand-border"></span>
+                <span className={`flex items-center gap-1 ${!jobStatus.isPrinting ? 'text-brand-muted' : jobStatus.isPaused ? 'text-status-warning' : 'text-status-success'}`}>
                     {!jobStatus.isPrinting ? 'STOPPED' : jobStatus.isPaused ? 'PAUSED' : 'RUNNING'}
                 </span>
             </div>
@@ -69,14 +76,14 @@ const TopBar: React.FC<TopBarProps> = ({ jobStatus, totalWasteCost, onPauseToggl
       </div>
 
       {/* Center: Waste Stats */}
-      <div className="hidden md:flex items-center gap-6 bg-brand-bg px-4 py-2 rounded-lg border border-brand-lightGray">
-         <div className="flex flex-col items-center px-4 border-r border-brand-lightGray">
-             <span className="text-label text-brand-gray uppercase">Est. Waste Cost</span>
-             <span className="text-body font-semibold text-brand-dark">€{totalWasteCost.toFixed(2)}</span>
+      <div className="hidden md:flex items-center gap-6 bg-brand-bg px-4 py-2 rounded-lg border border-brand-border">
+         <div className="flex flex-col items-center px-4 border-r border-brand-border">
+             <span className="text-[10px] font-bold text-brand-muted uppercase tracking-wider">Est. Waste Cost</span>
+             <span className="text-sm font-semibold text-brand-dark">€{totalWasteCost.toFixed(2)}</span>
          </div>
          <div className="flex flex-col items-center px-2">
-             <span className="text-label text-brand-gray uppercase">Quality Profile</span>
-             <span className="text-body font-medium text-brand-blue">{jobStatus.qualityProfile}</span>
+             <span className="text-[10px] font-bold text-brand-muted uppercase tracking-wider">Quality Profile</span>
+             <span className="text-sm font-medium text-brand-secondary">{jobStatus.qualityProfile}</span>
          </div>
       </div>
 
@@ -86,12 +93,12 @@ const TopBar: React.FC<TopBarProps> = ({ jobStatus, totalWasteCost, onPauseToggl
             onClick={onPauseToggle}
             disabled={!jobStatus.isPrinting}
             className={`
-                flex items-center gap-2 px-4 py-2 rounded-md font-medium text-body transition-colors border
+                flex items-center gap-2 px-4 py-2 rounded-md font-medium text-sm transition-colors border
                 ${!jobStatus.isPrinting
-                    ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                    ? 'bg-brand-bg text-brand-muted border-brand-border cursor-not-allowed opacity-50'
                     : jobStatus.isPaused 
                         ? 'bg-status-success text-white border-status-success hover:bg-green-600' 
-                        : 'bg-white text-brand-dark border-brand-lightGray hover:bg-gray-50'
+                        : 'bg-white text-brand-dark border-brand-border hover:bg-brand-bg'
                 }
             `}
          >
@@ -103,10 +110,10 @@ const TopBar: React.FC<TopBarProps> = ({ jobStatus, totalWasteCost, onPauseToggl
             onClick={onStop}
             disabled={!jobStatus.isPrinting}
             className={`
-                flex items-center gap-2 px-4 py-2 rounded-md font-medium text-body transition-colors border
+                flex items-center gap-2 px-4 py-2 rounded-md font-medium text-sm transition-colors border shadow-sm
                 ${!jobStatus.isPrinting
-                   ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-                   : 'bg-status-error text-white border-status-error hover:bg-red-700'
+                   ? 'bg-brand-bg text-brand-muted border-brand-border cursor-not-allowed opacity-50'
+                   : 'bg-status-critical text-white border-status-critical hover:bg-red-700'
                 }
             `}
          >

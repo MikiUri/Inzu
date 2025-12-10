@@ -1,3 +1,5 @@
+
+
 export enum ErrorSeverity {
   CRITICAL = 'Critical',
   HIGH = 'High',
@@ -7,11 +9,18 @@ export enum ErrorSeverity {
 
 export enum ErrorType {
   BANDING = 'Banding',
-  SMEARS = 'Ink Smudge',
-  GRAIN = 'Grain/Noise',
-  INK_DROP = 'Ink Drop',
-  SCRATCH = 'Scratch',
-  MISREGISTRATION = 'Misregistration'
+  NOZZLE_DROPOUT = 'Nozzle drop-out',
+  HEAD_STRIKE = 'Head strikes/scratches',
+  MEDIA_CREASE = 'Media wrinkles/creases',
+  SUBSTRATE_CONTAMINATION = 'Substrate contamination',
+  INK_ADHESION = 'Ink adhesion issues',
+  REGISTRATION = 'Registration errors',
+  GRADIENT_STEPPING = 'Gradient stepping',
+  SMEARS = 'Ink Smears', // Legacy support
+  GRAIN = 'Grain/Noise', // Legacy support
+  INK_DROP = 'Ink Drop', // Legacy support
+  SCRATCH = 'Scratch', // Legacy support
+  MISREGISTRATION = 'Misregistration' // Legacy support
 }
 
 export enum ErrorStatus {
@@ -33,6 +42,13 @@ export interface ThresholdConfig {
 
 export type QualityProfileType = 'High Quality (1200dpi)' | 'Standard (600dpi)' | 'Draft (300dpi)' | 'Eco Mode';
 
+export interface DashboardWidgetConfig {
+  efficiency: boolean;
+  activeJobs: boolean;
+  defects: boolean;
+  cost: boolean;
+}
+
 export interface PrintError {
   id: string;
   type: ErrorType;
@@ -47,6 +63,12 @@ export interface PrintError {
   wasteCost?: number; // Cost in Euros
   wasteMeters?: number; // Length wasted
   
+  // New Fields
+  wasteAmount?: number; // Linear meters
+  associatedPrinter?: string;
+  operatorShift?: string;
+  jobId?: string;
+
   probableCauses?: string[];
   correctiveActions?: string[];
   ignoreReason?: string;

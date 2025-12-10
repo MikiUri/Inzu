@@ -1,3 +1,4 @@
+
 import { ErrorSeverity, ErrorStatus, ErrorType, PrintError, PrintJobStatus, DefectOrigin, PredictiveAlert } from './types';
 
 export const ROLL_LENGTH_METERS = 50;
@@ -39,6 +40,10 @@ export const INITIAL_ERRORS: PrintError[] = [
     deltaE: 2.1,
     wasteCost: 12.50,
     wasteMeters: 0.5,
+    wasteAmount: 0.5,
+    associatedPrinter: 'LATEX-01',
+    operatorShift: 'Morning',
+    jobId: 'JOB-8823',
     probableCauses: ['Printhead misalignment'],
   },
   {
@@ -52,11 +57,15 @@ export const INITIAL_ERRORS: PrintError[] = [
     origin: DefectOrigin.MACHINE,
     deltaE: 0.5,
     wasteCost: 4.20,
-    wasteMeters: 0.2
+    wasteMeters: 0.2,
+    wasteAmount: 0.2,
+    associatedPrinter: 'LATEX-01',
+    operatorShift: 'Morning',
+    jobId: 'JOB-8823',
   },
   {
     id: '3',
-    type: ErrorType.SCRATCH,
+    type: ErrorType.HEAD_STRIKE,
     severity: ErrorSeverity.CRITICAL,
     timestamp: '09:53',
     meter: 22,
@@ -66,7 +75,11 @@ export const INITIAL_ERRORS: PrintError[] = [
     deltaE: 4.5,
     wasteCost: 45.00,
     wasteMeters: 3.0,
-    correctiveActions: ['Stop printer immediately'],
+    wasteAmount: 3.0,
+    associatedPrinter: 'LATEX-01',
+    operatorShift: 'Morning',
+    jobId: 'JOB-8823',
+    correctiveActions: ['Stop printer immediately', 'Check media height'],
   },
   {
     id: '4',
@@ -79,11 +92,15 @@ export const INITIAL_ERRORS: PrintError[] = [
     origin: DefectOrigin.FILE,
     deltaE: 0.2,
     wasteCost: 0,
-    wasteMeters: 0
+    wasteMeters: 0,
+    wasteAmount: 0,
+    associatedPrinter: 'LATEX-01',
+    operatorShift: 'Morning',
+    jobId: 'JOB-8823',
   },
   {
     id: '5',
-    type: ErrorType.MISREGISTRATION,
+    type: ErrorType.REGISTRATION,
     severity: ErrorSeverity.HIGH,
     timestamp: '09:12',
     meter: 5,
@@ -92,6 +109,10 @@ export const INITIAL_ERRORS: PrintError[] = [
     origin: DefectOrigin.MACHINE,
     deltaE: 2.8,
     wasteCost: 8.50,
-    wasteMeters: 0.4
+    wasteMeters: 0.4,
+    wasteAmount: 0.4,
+    associatedPrinter: 'LATEX-01',
+    operatorShift: 'Morning',
+    jobId: 'JOB-8823',
   }
 ];

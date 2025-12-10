@@ -19,33 +19,40 @@
             },
             colors: {
               brand: {
-                blue: '#0078D4',
-                dark: '#212121',
-                gray: '#616161',
-                lightGray: '#E0E0E0',
-                bg: '#F5F7FA',
-                panel: '#FFFFFF',
+                primary: '#E53E3E', // Primary Accent (High Severity, Interactive)
+                secondary: '#3182CE', // Secondary Accent (Info, Low Severity)
+                dark: '#1A202C', // Headings
+                body: '#4A5568', // Body text
+                muted: '#718096', // Metadata
+                bg: '#F8FAFC', // Main Content Background
+                panel: '#FFFFFF', // Panel/Card Background
+                border: '#E2E8F0', // Borders
               },
               status: {
-                error: '#E53935', // WCAG AA Compliant
-                warning: '#F59E0B',
-                success: '#10B981',
-                highlight: 'rgba(0, 120, 212, 0.10)',
-                highlightBorder: '#BBBBBB'
+                critical: '#E53E3E',
+                high: '#E53E3E',
+                medium: '#DD6B20',
+                low: '#3182CE',
+                success: '#38A169',
+                warning: '#D69E2E',
               }
             },
             spacing: {
               '2': '8px',
               '3': '12px',
               '4': '16px',
+              '5': '20px',
               '6': '24px',
               '8': '32px',
+              '10': '40px',
             },
             fontSize: {
-              'label': ['12px', { lineHeight: '1.2', fontWeight: '500' }],
-              'body': ['14px', { lineHeight: '1.5', fontWeight: '400' }],
-              'h2': ['20px', { lineHeight: '1.2', fontWeight: '600', letterSpacing: '-0.01em' }],
-              'h1': ['28px', { lineHeight: '1.2', fontWeight: '700', letterSpacing: '-0.01em' }],
+              'xs': ['12px', { lineHeight: '1.5' }],
+              'sm': ['14px', { lineHeight: '1.5' }],
+              'base': ['16px', { lineHeight: '1.5' }],
+              'lg': ['18px', { lineHeight: '1.4', fontWeight: '600' }], // Section Titles
+              'xl': ['20px', { lineHeight: '1.2', fontWeight: '600' }],
+              '2xl': ['24px', { lineHeight: '1.2', fontWeight: '700' }], // Headings
             }
           }
         }
@@ -66,19 +73,19 @@
       }
       body {
         font-family: 'Inter', sans-serif;
-        color: #212121;
-        background-color: #F5F7FA;
+        color: #4A5568;
+        background-color: #F8FAFC;
         -webkit-font-smoothing: antialiased;
       }
     </style>
-  <script type="importmap">
+<script type="importmap">
 {
   "imports": {
-    "vite": "https://aistudiocdn.com/vite@^7.2.7",
-    "react/": "https://aistudiocdn.com/react@^19.2.1/",
     "react": "https://aistudiocdn.com/react@^19.2.1",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
+    "react/": "https://aistudiocdn.com/react@^19.2.1/",
     "lucide-react": "https://aistudiocdn.com/lucide-react@^0.559.0",
+    "vite": "https://aistudiocdn.com/vite@^7.2.7",
     "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.2"
   }
 }

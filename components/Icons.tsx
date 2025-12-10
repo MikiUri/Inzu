@@ -1,3 +1,5 @@
+
+
 import { 
   AlertTriangle, 
   Printer, 
@@ -39,7 +41,11 @@ import {
   CheckSquare,
   Square,
   Share2,
-  Flag
+  Flag,
+  ScanLine,
+  Eraser,
+  Palette,
+  ArrowLeft
 } from 'lucide-react';
 
 export const Icons = {
@@ -55,6 +61,7 @@ export const Icons = {
   ZoomIn: ZoomIn,
   ZoomOut: ZoomOut,
   ArrowUp: ArrowUp,
+  ArrowLeft: ArrowLeft,
   
   // Defect Types
   Smears: Waves,
@@ -63,6 +70,14 @@ export const Icons = {
   InkDrop: Droplets,
   Scratch: FileWarning,
   Misregistration: Layers,
+  Nozzle: Eraser,
+  HeadStrike: ScanLine,
+  Crease: Waves,
+  Contamination: FileWarning,
+  Adhesion: Droplets,
+  Registration: Layers,
+  Color: Palette,
+  Palette: Palette,
   
   // UI
   ArrowRight: ChevronRight,
@@ -81,6 +96,7 @@ export const Icons = {
   // Navigation & Actions
   Home: Home,
   Jobs: LayoutGrid,
+  LayoutGrid: LayoutGrid,
   Filter: Filter,
   More: MoreHorizontal,
   Pause: PauseCircle,

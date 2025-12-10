@@ -1,3 +1,5 @@
+
+
 import React, { useState, useRef, useEffect } from 'react';
 import LeftNavigation from './components/LeftNavigation';
 import TopBar from './components/TopBar';
@@ -17,7 +19,8 @@ import {
   PrintJobStatus,
   ViewType,
   ThresholdConfig,
-  QualityProfileType
+  QualityProfileType,
+  DashboardWidgetConfig
 } from './types';
 import { 
   MOCK_JOB_STATUS, 
@@ -42,6 +45,12 @@ const App: React.FC = () => {
       minDefectSizeMM: 1.0,
       highSeverityPercentage: 85
   });
+  const [dashboardWidgets, setDashboardWidgets] = useState<DashboardWidgetConfig>({
+      efficiency: true,
+      activeJobs: true,
+      defects: true,
+      cost: true
+  });
   
   // --- Selection State ---
   const [selectedErrorId, setSelectedErrorId] = useState<string | null>(null);
@@ -55,12 +64,40 @@ const App: React.FC = () => {
   const [viewingImageError, setViewingImageError] = useState<PrintError | null>(null);
   const [ignoreTarget, setIgnoreTarget] = useState<PrintError | null>(null);
   
+  // 'general' = accessed from sidebar (quality, etc.)
+  // 'dashboard' = accessed from dashboard (layout, widgets)
+  // null = closed
+  const [settingsMode, setSettingsMode] = useState<'general' | 'dashboard' | null>(null);
+
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [currentScrollMeter, setCurrentScrollMeter] = useState(0);
 
   // --- Helpers ---
   const activeErrors = errors.filter(e => e.status === ErrorStatus.ACTIVE);
   const totalWasteCost = activeErrors.reduce((sum, e) => sum + (e.wasteCost || 0), 0);
+
+  // --- Logic for Profile Changes ---
+  const handleProfileChange = (newProfile: QualityProfileType) => {
+    setQualityProfile(newProfile);
+    
+    // Automatically adjust thresholds
+    let newThresholds: Partial<ThresholdConfig> = {};
+    switch(newProfile) {
+        case 'High Quality (1200dpi)':
+            newThresholds = { deltaE: 0.5, minDefectSizeMM: 0.1, highSeverityPercentage: 90 };
+            break;
+        case 'Standard (600dpi)':
+            newThresholds = { deltaE: 2.0, minDefectSizeMM: 1.0, highSeverityPercentage: 85 };
+            break;
+        case 'Draft (300dpi)':
+            newThresholds = { deltaE: 4.0, minDefectSizeMM: 2.0, highSeverityPercentage: 70 };
+            break;
+        case 'Eco Mode':
+            newThresholds = { deltaE: 5.0, minDefectSizeMM: 3.0, highSeverityPercentage: 60 };
+            break;
+    }
+    setThresholds(prev => ({ ...prev, ...newThresholds }));
+  };
 
   // --- Scroll Logic ---
   const handleScroll = () => {
@@ -107,7 +144,11 @@ const App: React.FC = () => {
   }, [simulationMeters, jobStatus.isPaused, jobStatus.isPrinting]);
 
   // --- Handlers ---
-  const handleSelectError = (error: PrintError) => {
+  const handleSelectError = (error: PrintError | null) => {
+    if (!error) {
+        setSelectedErrorId(null);
+        return;
+    }
     setSelectedErrorId(error.id);
     // Auto scroll to error if we are in active job view
     if (currentView !== 'activeJob') setCurrentView('activeJob');
@@ -132,11 +173,38 @@ const App: React.FC = () => {
         } : e));
         setIgnoreTarget(null);
         setViewingImageError(null); // Close modal if open
+        setSelectedErrorId(null); // Close detail view
     }
+  };
+
+  const handleIgnoreId = (id: string, reason: string) => {
+     setErrors(prev => prev.map(e => e.id === id ? {
+         ...e,
+         status: ErrorStatus.DISMISSED,
+         ignoreReason: reason
+     } : e));
+     setSelectedErrorId(null);
+  };
+
+  const handleRestoreId = (id: string) => {
+      setErrors(prev => prev.map(e => e.id === id ? {
+          ...e,
+          status: ErrorStatus.ACTIVE,
+          ignoreReason: undefined
+      } : e));
   };
   
   const handleReportError = (error: PrintError) => {
     setErrors(prev => prev.map(e => e.id === error.id ? { ...e, status: ErrorStatus.REPORTED } : e));
+    alert(`Error #${error.id} reported to maintenance log.`);
+  };
+  
+  const handleReprint = (errorId: string) => {
+    alert(`Success: Section for Defect #${errorId} has been added to the reprint queue.`);
+  };
+
+  const handleLogMaintenance = (errorId: string) => {
+    alert(`Maintenance Request Logged: Defect #${errorId}. Ticket #MT-${Math.floor(Math.random() * 1000)} created.`);
   };
   
   const handleStop = () => {
@@ -154,20 +222,34 @@ const App: React.FC = () => {
   const renderContent = () => {
       switch(currentView) {
           case 'dashboard':
-              return <DashboardView onNavigate={setCurrentView} onSelectMachine={handleMachineSelect} />;
+              return (
+                <DashboardView 
+                    onNavigate={setCurrentView} 
+                    onSelectMachine={handleMachineSelect}
+                    onCustomizeView={() => setSettingsMode('dashboard')}
+                    widgets={dashboardWidgets}
+                />
+              );
           case 'reports':
               return <WasteReportModal isOpen={true} isPage={true} />;
           case 'training':
               return <TrainingModal isOpen={true} isPage={true} />;
           case 'settings':
+              // If user navigated via sidebar to 'settings', we show the settings page
+              // Note: The modal is separate. This case might be used if we wanted a full page settings.
+              // For now, let's open the modal in 'general' mode and stay on dashboard or active job?
+              // The LeftNavigation sets view to 'settings', so we need to render something.
               return (
-                <SettingsModal 
+                  <SettingsModal 
                     isOpen={true} 
                     isPage={true}
                     currentProfile={qualityProfile}
-                    onUpdateProfile={setQualityProfile}
+                    onUpdateProfile={handleProfileChange}
                     thresholds={thresholds}
                     onUpdateThresholds={setThresholds}
+                    mode="general"
+                    widgets={dashboardWidgets}
+                    onUpdateWidgets={setDashboardWidgets}
                 />
               );
           case 'activeJob':
@@ -194,7 +276,7 @@ const App: React.FC = () => {
                         />
                      </div>
         
-                     {/* Right Panel: Details */}
+                     {/* Right Panel: Details (Handles List vs Detail internally) */}
                      <ErrorDetailsPanel 
                         errors={errors}
                         selectedErrorId={selectedErrorId}
@@ -207,6 +289,10 @@ const App: React.FC = () => {
                             setBulkSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
                         }}
                         onSelectAll={setBulkSelectedIds}
+                        onIgnoreId={handleIgnoreId}
+                        onRestoreId={handleRestoreId}
+                        onReprint={handleReprint}
+                        onLogMaintenance={handleLogMaintenance}
                      />
                  </div>
               );
@@ -214,12 +300,16 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-brand-bg text-brand-dark font-sans">
+    <div className="flex h-screen w-full overflow-hidden bg-brand-bg text-brand-body font-sans">
       
       {/* 1. Global Sidebar */}
       <LeftNavigation 
         currentView={currentView} 
-        onNavigate={setCurrentView}
+        onNavigate={(view) => {
+            // Special handling for settings to keep it as a modal if preferred, 
+            // but requirements say "view". The code above handles 'settings' viewType.
+            setCurrentView(view);
+        }}
       />
 
       {/* 2. Main Content Area */}
@@ -230,6 +320,7 @@ const App: React.FC = () => {
             totalWasteCost={totalWasteCost}
             onPauseToggle={() => setJobStatus(prev => ({ ...prev, isPaused: !prev.isPaused }))}
             onStop={handleStop}
+            onSelectMachine={handleMachineSelect}
          />
 
          {renderContent()}
@@ -240,7 +331,9 @@ const App: React.FC = () => {
       <RealImageModal 
         error={viewingImageError} 
         onClose={() => setViewingImageError(null)} 
-        onIgnore={() => setIgnoreTarget(viewingImageError)}
+        onIgnore={() => {
+            if (viewingImageError) setIgnoreTarget(viewingImageError);
+        }}
       />
 
       <ConfirmationModal 
@@ -248,6 +341,20 @@ const App: React.FC = () => {
         title="Ignore Defect?"
         onClose={() => setIgnoreTarget(null)}
         onConfirm={handleConfirmIgnore}
+      />
+      
+      {/* Settings Modal (Overlay) */}
+      {/* This renders when settingsMode is active, overriding whatever view is behind it if needed, or acting as the customization modal */}
+      <SettingsModal 
+        isOpen={settingsMode !== null}
+        onClose={() => setSettingsMode(null)}
+        currentProfile={qualityProfile}
+        onUpdateProfile={handleProfileChange}
+        thresholds={thresholds}
+        onUpdateThresholds={setThresholds}
+        mode={settingsMode || 'general'}
+        widgets={dashboardWidgets}
+        onUpdateWidgets={setDashboardWidgets}
       />
 
     </div>
